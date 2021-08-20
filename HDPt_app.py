@@ -32,7 +32,7 @@ import astropy.units as u
 import HDPm
 import utils_app
 
-from buttons import download_button
+from extensions.buttons import download_button
 import json
 import zipfile
 import base64
@@ -112,7 +112,7 @@ def run():
         extra_ = None
                           
     st.sidebar.markdown('## Plot Options')
-    with st.sidebar.beta_expander('Select from different plots to visualize:',
+    with st.sidebar.expander('Select from different plots to visualize:',
                                   expanded=True):
         plt_distprop = st.checkbox('Propagation plot', value=True)
         plt_conntime = st.checkbox('Connection times vs Phi plot', value=False)
@@ -121,16 +121,16 @@ def run():
     
     st.sidebar.markdown('## Coronal Parameters')
     st.sidebar.markdown('')
-    with st.sidebar.beta_expander('Magnetic field lines configuration:', expanded=False):
+    with st.sidebar.expander('Magnetic field lines configuration:', expanded=False):
         fls_model_ = st.radio('', ['Radial','Parker spiral(*)','Streamer(*)'])
         st.markdown('(*) Mode not implemented yet')
-    with st.sidebar.beta_expander('Density models:', expanded=False):
+    with st.sidebar.expander('Density models:', expanded=False):
         density_model_ = st.radio('', ['Saito','Newkirk','Leblanc'])
         nfold_value = st.number_input('N-fold number', 0.5, 5., 1., step=0.1)
-    with st.sidebar.beta_expander('Magnetic field models:', expanded=False):
+    with st.sidebar.expander('Magnetic field models:', expanded=False):
         magnetic_model_ = st.radio('', ['1/r^2','1/r^3'])
         B0_value = st.number_input('B0 at surface [gauss]', 0.5, 10., 2.2, step=0.1)
-    with st.sidebar.beta_expander('Solar wind models:', expanded=False):
+    with st.sidebar.expander('Solar wind models:', expanded=False):
         st.radio('', ['Parker'])
         T0_value = st.number_input('T0 at surface  [MK]',
                                    10.**5, 10.**7, 1.4 * 10**6,
@@ -160,7 +160,7 @@ def run():
     
     if plt_distprop:
         st.subheader('Propagation Plot')
-        left_col, right_col = st.beta_columns(2)
+        left_col, right_col = st.columns(2)
         propa_plt_mode = left_col.selectbox('Select visualization', 
                                       ['Disturbance','Fieldlines'])
         if propa_plt_mode == 'Disturbance':
@@ -169,7 +169,7 @@ def run():
             first_cmmode = 'Phi'
         cmmode_ = right_col.selectbox('Select colormap parameter', 
                                       [first_cmmode,'Theta_BN','Mach Alfven'])
-        left_col, right_col = st.beta_columns(2)
+        left_col, right_col = st.columns(2)
         xlim = left_col.slider('Adjust x-axis limits:', -3, 15, (0,12))
         ylim = right_col.slider('Adjust y-axis limits:', -15, 15, (-6,6))
 
@@ -208,7 +208,7 @@ def run():
 
     if plt_paramete:
         st.subheader('Parameters profile plot')
-        left_col, right_col = st.beta_columns(2)
+        left_col, right_col = st.columns(2)
         mode_profile = left_col.selectbox('Select profile mode',
                                           ['Height', 'Time'])
         mode_param = right_col.selectbox('Select shock parameter',
@@ -224,7 +224,7 @@ def run():
         # Download button png
         plot2 = io.BytesIO()
         plt.savefig(plot2, format='png', bbox_inches='tight')
-        col1, col2 = st.beta_columns(2)
+        col1, col2 = st.columns(2)
         download_button_str = download_button(plot2.getvalue(), 
                               'HDPmt_parameters_plot.png', 
                               'Download figure as .png file',
@@ -277,15 +277,13 @@ def run():
                 and _HDPt_ is a lightweight tool that can be used to perform case studies
                 and visualize the modeled results. The implementation of 
                 the Heliospheric Disturbance Propagation Model is described by 
-                [Kouloumvakos et al. (2020)](). 
+                [Kouloumvakos et al. (2021)](). 
                 
                 **Github**: You can find [here](https://github.com/AthKouloumvakos/HDPmt) the latest version of HDPmt.
-                
-                **Version**: HDPmt (v0.5)
 
-                **Citation**: Please cite this software as [Kouloumvakos et al. (2020)]()
+                **Citation**: Please cite this software as [Kouloumvakos et al. (2021)]()
                 """)
-    col1, col2 = st.beta_columns((5,1))
+    col1, col2 = st.columns((5,1))
     col1.markdown("The development of the online tool has received funding from the \
                    European Union's Horizon 2020 research and innovation programme \
                    under grant agreement No 101004159 (SERPENTINE).")

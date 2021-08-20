@@ -3,4 +3,4 @@ pandas
 scipy
 astropy
 matplotlib
-streamlit
+streamlit==0.86.0

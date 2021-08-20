@@ -9,9 +9,9 @@
 _HDPm_ is a simple geometrical model to describe the propagation and longitudinal extension of a disturbance
 in the heliosphere and _HDPt_ is a lightweight tool that can be used to visualize the model results and perform
 case studies. The implementation of the Heliospheric Disturbance Propagation Model is described by Kouloumvakos et al. (2021).
-An online application of this tool is available at [https://athkouloumvakos.github.io/HDPmt](https://athkouloumvakos.github.io/HDPmt).
+A preview of this tool is available at [https://athkouloumvakos.github.io/HDPmt](https://athkouloumvakos.github.io/HDPmt).
 
-## Installation
+## 💾 Installation
 
 _HDPmt_ is written in Python >=3.8 and has some package requirements, which are listed in the requirements.txt and environment.yml files. 
 To run localy this application we recomend to create its own virtual enviroment in python.
@@ -61,7 +61,7 @@ streamlit run HDPt_app.py
 ```
 The application should now open in the default browser!
 
-# 📙 Usage
+## 📙 Usage
 
 Complete documentation of the _HDPmt_ can be found in HDPmt_doc.ipynb.
 
