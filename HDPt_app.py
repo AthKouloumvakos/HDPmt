@@ -34,10 +34,13 @@ import utils_app
 
 from extensions.buttons import download_button
 import json
+from astropy.utils.misc import JsonCustomEncoder
 import zipfile
 import base64
 
 import datetime
+
+import utils_plot
 
 LOGGER = get_logger(__name__)
 
@@ -46,10 +49,10 @@ def run():
     # set page config
     st.set_page_config(page_title='HDPt', page_icon=":rocket:",
                        initial_sidebar_state="expanded")
-                           
+
     #############################################################
     # Styles
-    
+
     # Hide the menu button
     st.markdown(""" <style>
                 #MainMenu {visibility: hidden;}
@@ -75,10 +78,10 @@ def run():
                 hr {{
                 margin: 10px 0px;
                 }} </style> """, unsafe_allow_html=True)
-    
+
     #############################################################
     # Tools
-    
+
     # Main Sliders
     st.sidebar.markdown('## Disturbance Parameters')
     V0 = st.sidebar.slider('Expansion Speed [km/s]:', 100, 3000, 800)
@@ -87,30 +90,37 @@ def run():
                               step=0.01, format='%1.2f')
     epsilon = st.sidebar.slider('epsilon:', 0.5, 1.5, 1.,
                                  step=0.01, format='%1.2f')
-    
+
     if V0 < 300 or V0 > 2500 or alpha < 0.15 or alpha > 0.85 or epsilon > 1.3 or epsilon < 0.7: 
         st.sidebar.warning('Warning: Parameter value is ambiguous.')
-    
+
     # Explore Section
     st.sidebar.markdown('**Explore Connections:**')
     mode_connect = st.sidebar.selectbox('Select a mode',
                                         ['-','Connection to Point',
-                                         'First Connections'])
+                                         'Connection at Surface',
+                                         'First Connection'])
     if mode_connect == 'Connection to Point':
         r = st.sidebar.slider('Distance from Sun center [Rsun]:',
-                              1., 10., 3., step=0.1, format='%1.1f')
+                              1., 10., 3., step=0.1, format='%1.1f') 
         phi = st.sidebar.slider('Helio-Longitude [deg]:',
                                 0., 90., 45., step=0.1, format='%1.1f')
-        mode = 0
-        extra_ = {'phi' : phi * u.deg, 'r': r * u.R_sun, 'mode': mode}
-    elif mode_connect == 'First Connections':
-        r = 1
-        phi = st.sidebar.slider('Helio-Longitude [deg]:', 0, 90, 45)
-        mode = 1
-        extra_ = {'phi' : phi * u.deg, 'r': r * u.R_sun, 'mode': mode}
+        extra_ = {'phi' : phi * u.deg, 'r': r * u.R_sun, 'mode': 0}
+    elif mode_connect == 'Connection at Surface':
+        r = np.logspace(np.log10(1),
+                        np.log10(215), 250)
+        phi = st.sidebar.slider('Helio-Longitude [deg]:',
+                                0., 90., 45., step=0.1, format='%1.1f')
+        extra_ = {'phi' : phi * u.deg, 'r': r * u.R_sun, 'mode': 1}
+    elif mode_connect == 'First Connection':
+        r = np.logspace(np.log10(1),
+                        np.log10(215), 250)
+        phi = st.sidebar.slider('Helio-Longitude [deg]:',
+                                0., 90., 45., step=0.1, format='%1.1f')
+        extra_ = {'phi' : phi * u.deg, 'r': r * u.R_sun, 'mode': 2}
     elif mode_connect == '-':
         extra_ = None
-                          
+
     st.sidebar.markdown('## Plot Options')
     with st.sidebar.expander('Select from different plots to visualize:',
                                   expanded=True):
@@ -135,17 +145,27 @@ def run():
         T0_value = st.number_input('T0 at surface  [MK]',
                                    10.**5, 10.**7, 1.4 * 10**6,
                                    step=10.**5, format='%e')
+    
+    #################################################
+    # Construct the model
+    cmodel_options = {'density_model': {'model': density_model_, 'nfold': nfold_value},
+                      'magnetic_model': {'model': magnetic_model_, 'B0': B0_value * u.gauss},
+                      'sw_model': {'model': 'Parker', 'T': T0_value * u.Kelvin}
+                      }
+    lon_mesh, distance_mesh = np.meshgrid(np.linspace(0, np.pi/2, 4*91)*u.rad,
+                                          np.logspace(np.log10(1*u.R_sun.in_units(u.km)),
+                                                      np.log10(215*u.R_sun.in_units(u.km)), 250) * u.km)
 
-    smodel = HDPm.disturbance_model(a0*(u.m/u.second**2),
-                                       V0*(u.km/u.second),
-                                       alpha,
-                                       epsilon,
-                                       density_model = density_model_,
-                                       NFold = nfold_value,
-                                       magnetic_model = magnetic_model_,
-                                       B0 = B0_value * u.gauss,
-                                       sw_model = 'Parker',
-                                       T0 = T0_value * u.Kelvin)
+    cpoints = HDPm.connection_points(lon_mesh, distance_mesh)
+    cparams = HDPm.coronal_parameters(cpoints, cmodel_options)
+    smodel = HDPm.disturbance(a0*(u.m/u.second**2),
+                              V0*(u.km/u.second),
+                              alpha,
+                              epsilon)
+    smodel = smodel.set_parameters(cpoints, cparams)
+    
+    if extra_ is not None:
+        extra_['cparams'] = cparams
 
     ###
     # Main Page
@@ -155,9 +175,9 @@ def run():
                 from different plot options.** 
                 """)
     st.markdown('---') 
-    
+
     plot_buffer = []
-    
+
     if plt_distprop:
         st.subheader('Propagation Plot')
         left_col, right_col = st.columns(2)
@@ -173,9 +193,10 @@ def run():
         xlim = left_col.slider('Adjust x-axis limits:', -3, 15, (0,12))
         ylim = right_col.slider('Adjust y-axis limits:', -15, 15, (-6,6))
 
-        plt = smodel.plot_propagation(app=True, plt_type=propa_plt_mode.lower(),
-                                      extra=extra_, xlim=xlim, ylim=ylim, cmmode=cmmode_)
-        
+        plt = utils_plot.plot_propagation(smodel,
+                                          app=True, plt_type=propa_plt_mode.lower(),
+                                          extra=extra_, xlim=xlim, ylim=ylim, cmmode=cmmode_)
+
         # Download button
         plot2 = io.BytesIO()
         plt.savefig(plot2, format='png', bbox_inches='tight')
@@ -189,22 +210,24 @@ def run():
 
     if plt_conntime:
         st.subheader('Connection times vs Phi plot')
-        
+
         plt_MA = st.checkbox('Plot MA contour?', value=True)
 
-        plt, sparam_ = smodel.plot_phivstime(plot_MA=plt_MA, app=True, extra=extra_)
+        plt = utils_plot.plot_phivstime(smodel,
+                                        plot_MA=plt_MA,
+                                        app=True,
+                                        extra=extra_)
 
         # Download button
         plot2 = io.BytesIO()
         plt.savefig(plot2, format='png', bbox_inches='tight')
         download_button_str = download_button(plot2.getvalue(), 
-                              'HDPmt_connection_times.png', 
+                              'HDPmt_connection_times_vs_phi.png', 
                               'Download figure as .png file',
                               pickle_it=False)
         st.markdown(download_button_str, unsafe_allow_html=True)
-        plot_buffer.append(('HDPmt_connection_times.png', plot2))
+        plot_buffer.append(('HDPmt_connection_times_vs_phi.png', plot2))
         st.markdown('---')
-
 
     if plt_paramete:
         st.subheader('Parameters profile plot')
@@ -217,20 +240,21 @@ def run():
             parameter_='MA'
         elif mode_param == 'Theta_BN':
             parameter_='ThBN'
-        plt = smodel.plot_parameters_profile(app=True,
-                                             parameter_mode=parameter_,
-                                             xmode=mode_profile.lower(),
-                                             extra=extra_)
+        plt = utils_plot.plot_parameters_profile(smodel,
+                                                 app=True,
+                                                 parameter_mode=parameter_,
+                                                 xmode=mode_profile.lower(),
+                                                 extra=extra_)
         # Download button png
         plot2 = io.BytesIO()
         plt.savefig(plot2, format='png', bbox_inches='tight')
         col1, col2 = st.columns(2)
         download_button_str = download_button(plot2.getvalue(), 
-                              'HDPmt_parameters_plot.png', 
+                              'HDPmt_parameters_profile_plot.png', 
                               'Download figure as .png file',
                               pickle_it=False) # TODO Use different filenames
         col1.markdown(download_button_str, unsafe_allow_html=True)
-        plot_buffer.append(('HDPmt_parameters_plot.png', plot2))
+        plot_buffer.append(('HDPmt_parameters_profile_plot.png', plot2))
         # Download button json data
         # TODO Add here an option to download the parameter profile data to a json file
         if extra_ is not None:
@@ -245,7 +269,8 @@ def run():
                                    }
                                })
             json_buffer = io.BytesIO()
-            json_buffer.write(json.dumps(dict_smodel,indent=' ').encode())
+
+            json_buffer.write(json.dumps(dict_smodel,indent=' ', cls=JsonCustomEncoder).encode())
             download_button_str = download_button(json_buffer.getvalue(), 
                                                   'HDPmt_model_parameters_profile.json', 
                                                   'Download parameter profile as .json file')
@@ -254,7 +279,7 @@ def run():
 
     if plt_cormodel:
         st.subheader('Coronal models plot')
-        smodel.plot_coronal_models(app=True)
+        utils_plot.plot_coronal_models(smodel, app=True)
         # Download button
         plot2 = io.BytesIO()
         plt.savefig(plot2, format='png', bbox_inches='tight')
@@ -266,7 +291,6 @@ def run():
         plot_buffer.append(('HDPmt_coronal_models.png', plot2))
         st.markdown('---')
 
-        
     st.subheader('About HDPmt and this application')
     st.markdown(""" 
                 The _Heliospheric Disturbance Propagation Model & Tool
@@ -278,7 +302,7 @@ def run():
                 and visualize the modeled results. The implementation of 
                 the Heliospheric Disturbance Propagation Model is described by 
                 [Kouloumvakos et al. (2021)](). 
-                
+
                 **Github**: You can find [here](https://github.com/AthKouloumvakos/HDPmt) the latest version of HDPmt.
 
                 **Citation**: Please cite this software as [Kouloumvakos et al. (2021)]()
@@ -296,7 +320,7 @@ def run():
 
     dict_smodel = utils_app.make_smodel_dict(smodel)
     json_buffer = io.BytesIO()
-    json_buffer.write(json.dumps(dict_smodel,indent=' ').encode())
+    json_buffer.write(json.dumps(dict_smodel,indent=' ', cls=JsonCustomEncoder).encode())
     download_button_str = download_button(json_buffer.getvalue(), 
                               'HDPmt_model_parameters.json', 
                               'Download parameters as .json file')
@@ -312,7 +336,7 @@ def run():
                               'Download param & plots as .zip file',
                               pickle_it=False)
     st.sidebar.markdown(download_button_str, unsafe_allow_html=True)
-    
+
     # TODO: Provide parameters as json input
     #json_input = st.sidebar.file_uploader('Upload parameters as .json file',
     #                                      type=['.json'], on_change=None)
