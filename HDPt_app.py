@@ -41,6 +41,7 @@ import base64
 import datetime
 
 import utils_plot
+import coronal_models
 
 LOGGER = get_logger(__name__)
 
@@ -128,10 +129,10 @@ def run():
         plt_conntime = st.checkbox('Connection times vs Phi plot', value=False)
         plt_paramete = st.checkbox('Parameters profile plot', value=False)
         plt_cormodel = st.checkbox('Coronal models plot', value=False)
-    
+
     st.sidebar.markdown('## Coronal Parameters')
     st.sidebar.markdown('')
-    with st.sidebar.expander('Magnetic field lines configuration:', expanded=False):
+    with st.sidebar.expander('Magnetic fieldlines configuration:', expanded=False):
         fls_model_ = st.radio('', ['Radial','Parker spiral(*)','Streamer(*)'])
         st.markdown('(*) Mode not implemented yet')
     with st.sidebar.expander('Density models:', expanded=False):
@@ -145,12 +146,16 @@ def run():
         T0_value = st.number_input('T0 at surface  [MK]',
                                    10.**5, 10.**7, 1.4 * 10**6,
                                    step=10.**5, format='%e')
-    
+        usw_model = coronal_models.solarwind_speed_model(np.linspace(1,215,215) * u.R_sun, 'Parker', T0_value * u.Kelvin)
+        usw_mean = np.mean(usw_model.vsw)
+        st.write("Mean SW Speed= {:.2f}".format(usw_mean))
+
     #################################################
     # Construct the model
     cmodel_options = {'density_model': {'model': density_model_, 'nfold': nfold_value},
-                      'magnetic_model': {'model': magnetic_model_, 'B0': B0_value * u.gauss},
-                      'sw_model': {'model': 'Parker', 'T': T0_value * u.Kelvin}
+                      'magnetic_model': {'model': magnetic_model_, 'topo': fls_model_,
+                                         'B0': B0_value * u.gauss, 'usw': usw_mean },
+                      'sw_model': {'model': 'Parker', 'T': T0_value * u.Kelvin},
                       }
     lon_mesh, distance_mesh = np.meshgrid(np.linspace(0, np.pi/2, 4*91)*u.rad,
                                           np.logspace(np.log10(1*u.R_sun.in_units(u.km)),
@@ -162,12 +167,9 @@ def run():
                               V0*(u.km/u.second),
                               alpha,
                               epsilon)
-    smodel = smodel.set_parameters(cpoints, cparams)
-    
-    if extra_ is not None:
-        extra_['cparams'] = cparams
+    # smodel = smodel.set_parameters(cpoints, cparams)
 
-    ###
+    #################################################
     # Main Page
     st.title('Heliospheric Disturbance Propagation Tool (HDPt)')
     st.markdown("""
@@ -193,7 +195,7 @@ def run():
         xlim = left_col.slider('Adjust x-axis limits:', -3, 15, (0,12))
         ylim = right_col.slider('Adjust y-axis limits:', -15, 15, (-6,6))
 
-        plt = utils_plot.plot_propagation(smodel,
+        plt = utils_plot.plot_propagation(smodel, cmodel_options,
                                           app=True, plt_type=propa_plt_mode.lower(),
                                           extra=extra_, xlim=xlim, ylim=ylim, cmmode=cmmode_)
 
@@ -213,7 +215,7 @@ def run():
 
         plt_MA = st.checkbox('Plot MA contour?', value=True)
 
-        plt = utils_plot.plot_phivstime(smodel,
+        plt = utils_plot.plot_phivstime(smodel, cpoints, cmodel_options,
                                         plot_MA=plt_MA,
                                         app=True,
                                         extra=extra_)
@@ -240,7 +242,7 @@ def run():
             parameter_='MA'
         elif mode_param == 'Theta_BN':
             parameter_='ThBN'
-        plt = utils_plot.plot_parameters_profile(smodel,
+        plt = utils_plot.plot_parameters_profile(smodel, cmodel_options,
                                                  app=True,
                                                  parameter_mode=parameter_,
                                                  xmode=mode_profile.lower(),
@@ -258,7 +260,7 @@ def run():
         # Download button json data
         # TODO Add here an option to download the parameter profile data to a json file
         if extra_ is not None:
-            dict_smodel = utils_app.make_smodel_dict(smodel)
+            dict_smodel = utils_app.make_smodel_dict(smodel, cmodel_options)
             line = plt.gca().get_lines()[-2] # TODO: If the plot order change this will result to error
             xd = line.get_xdata()
             yd = line.get_ydata()
@@ -279,7 +281,7 @@ def run():
 
     if plt_cormodel:
         st.subheader('Coronal models plot')
-        utils_plot.plot_coronal_models(smodel, app=True)
+        utils_plot.plot_coronal_models(smodel, cmodel_options, app=True)
         # Download button
         plot2 = io.BytesIO()
         plt.savefig(plot2, format='png', bbox_inches='tight')
@@ -313,12 +315,12 @@ def run():
                    under grant agreement No 101004159 (SERPENTINE).")
     col2.markdown('[<img src="https://serpentine-h2020.eu/wp-content/uploads/2021/02/SERPENTINE_logo_new.png" \
                    height="80">](https://serpentine-h2020.eu)', unsafe_allow_html=True)
-    
+
     #############################################################
     # I/O sidebar section
     st.sidebar.markdown('## I/O model parameters & plots')    
 
-    dict_smodel = utils_app.make_smodel_dict(smodel)
+    dict_smodel = utils_app.make_smodel_dict(smodel, cmodel_options)
     json_buffer = io.BytesIO()
     json_buffer.write(json.dumps(dict_smodel,indent=' ', cls=JsonCustomEncoder).encode())
     download_button_str = download_button(json_buffer.getvalue(), 

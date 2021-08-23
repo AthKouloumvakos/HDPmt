@@ -45,31 +45,19 @@ class coronal_parameters():
         r = connection_points.distance
         
         self.options = options
-        
+
         self.density = coronal_models.density_model(r, model=options['density_model']['model'],
-                                              nfold=options['density_model']['nfold'])
+                                                    nfold=options['density_model']['nfold'])
         self.magnetic_field = coronal_models.magnetic_model(r, model=options['magnetic_model']['model'],
-                                                B0=options['magnetic_model']['B0'])
+                                                            topo=options['magnetic_model']['topo'],
+                                                            B0=options['magnetic_model']['B0'],
+                                                            usw=options['magnetic_model']['usw'])
         self.sw_speed = coronal_models.solarwind_speed_model(r, model=options['sw_model']['model'],
-                                                       T=options['sw_model']['T'])
+                                                             T=options['sw_model']['T'])
 
 class disturbance:
     r"""
-    Examples
-    --------
-
-    Example calculation and ploting using default values
-
-    >>> import astropy.units as u
-    >>> import HDPm
-    >>> smodel = HDPm.disturbance_model(0*(u.km/u.second**2),800*(u.km/u.second))
-    >>> x,y = smodel.propagate(smodel.products.time_propagation)
-    >>> smodel.plot_propagation()
-    >>> smodel.connection_time_to_point(45*u.deg,2*u.R_sun)
-    >>> smodel.first_connection_times(45*u.deg)
-    >>> smodel.calculate_theta_BN(45*u.deg,2*u.R_sun)
-    >>> smodel.density_models(2*u.R_sun,model='Saito')
-    >>> smodel.plot_phivstime()
+     This is a class for the disturbance
     """
     
     @u.quantity_input
@@ -171,15 +159,18 @@ class disturbance:
         return time.decompose()
 
     @u.quantity_input
-    def calculate_theta_BN(self, connection_points, time: u.second = None):
+    def calculate_theta_BN(self, connection_points, br_angle: u.rad, time: u.second = None):
         r"""
         Calculate the shock geometry (Theta_BN angle) at a point
-        with polar coordinates (phi[rad],r[km])
+        with polar coordinates (phi[rad], r[km])
         """
 
         phi = connection_points.lon
         r = connection_points.distance
 
+        if time is None:
+            time = self.connection_time_to_point(connection_points)
+        
         if time is None:
             time = self.connection_time_to_point(connection_points)
 
@@ -188,25 +179,27 @@ class disturbance:
         dsh = R_sun + self.alpha * Rsh
         omega = np.arctan2(1, 1/(r*np.sin(phi)/(r*np.cos(phi)-dsh)))
         omega = np.arctan2(1, 1/(self.epsilon**-2 * np.tan(omega)))
-        theta_BN = omega - phi
-        theta_BN[theta_BN<0*u.rad] = -(theta_BN[theta_BN<0*u.rad] + (np.pi)*u.rad)
+        theta_NR = omega - phi
+        theta_NR[theta_NR<0*u.rad] = -(theta_NR[theta_NR<0*u.rad] + (np.pi)*u.rad)
+        omega[phi>(np.pi)*u.rad] = phi[phi>(np.pi)*u.rad] - theta_NR[phi>(np.pi)*u.rad]
+
+        theta_BN = (theta_NR + br_angle) % (np.pi*u.rad)
 
         return theta_BN.decompose(), omega.decompose(), time.decompose()
 
     @u.quantity_input
-    def calculate_vshn(self, connection_points, time: u.second = None, theta_BN: u.rad = None):
-        
+    def calculate_vshn(self, connection_points, time: u.second = None, omega: u.rad = None):
+
         phi = connection_points.lon
         r = connection_points.distance
 
         if time is None:
             time = self.connection_time_to_point(connection_points)
-            
-        if theta_BN is None:
-            theta_BN, omega, _ = self.calculate_theta_BN(connection_points, time = time)
 
-        omega = phi + theta_BN
-        omega[phi>(np.pi)*u.rad] = phi[phi>(np.pi)*u.rad] - theta_BN[phi>(np.pi)*u.rad]
+        if omega is None:
+            #  I put here br_angle = 0 because it doesn't mater on the calculation. This will
+            #  change in the future.
+            _, omega, _ = self.calculate_theta_BN(connection_points, 0*u.rad, time = time) 
 
         V_ = self.a0 * time + self.V0
         Vshn = (V_ * np.sqrt(np.cos(phi)**2 +
@@ -219,7 +212,8 @@ class disturbance:
 
     @u.quantity_input
     def shock_parameters(self, connection_points, coronal_parameters,
-                         time: u.second = None, theta_BN: u.rad = None):
+                         time: u.second = None, theta_BN: u.rad = None,
+                         omega: u.rad = None):
         r"""
         Calculate the shock parameters (MA, Theta_BN, time) at a point
         with polar coordinates (phi[rad],r[m])
@@ -234,17 +228,19 @@ class disturbance:
         if time is None:
             time = self.connection_time_to_point(connection_points)
 
-        if theta_BN is None:
-            theta_BN, _, _ = self.calculate_theta_BN(connection_points, time = time)
-        
+        if (theta_BN is None) or (omega is None):
+            theta_BN, omega, _ = self.calculate_theta_BN(connection_points, 
+                                                         coronal_parameters.magnetic_field.br_angle,
+                                                         time = time)
+
         Ne = coronal_parameters.density.Ne
         B = coronal_parameters.magnetic_field.B
         Vsw = coronal_parameters.sw_speed.vsw
 
         VA = B / np.sqrt(const.mu0*m_i*(1.92*Ne))
 
-        Vshn = self.calculate_vshn(connection_points, time = time, theta_BN = theta_BN);
-        
+        Vshn = self.calculate_vshn(connection_points, time = time, omega = omega);
+
         MA = np.abs(Vshn-Vsw*np.cos(theta_BN))/VA
 
         return MA.decompose(), theta_BN.decompose(), Vshn.decompose(), time.decompose()

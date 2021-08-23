@@ -2,7 +2,7 @@
 import astropy.units as u
 import datetime
 
-def make_smodel_dict(smodel):
+def make_smodel_dict(smodel, cmodel_options):
     dict_smodel ={
     "disturbance": {
         "a0": smodel.a0,
@@ -10,7 +10,7 @@ def make_smodel_dict(smodel):
         "alpha": smodel.alpha,
         "epsilon": smodel.epsilon,
      },
-    'coronal_model': smodel.coronal_parameters.options,
+    'coronal_model': cmodel_options,
     "misc": {
         "date_run": (datetime.datetime.now()).strftime('%Y-%m-%d %H:%M:%S'),
      },

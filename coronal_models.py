@@ -38,11 +38,25 @@ class density_model():
 @u.quantity_input
 class magnetic_model():
     @u.quantity_input
-    def __init__(self, r: u.km, model, B0: u.gauss, alpha=1):
+    def __init__(self, r: u.km, model, topo,
+                 B0: u.gauss, usw: (u.km / u.second) = None, alpha=1, ):
         self.model = model
+        self.topo = topo
         self.B0 = B0
         self.r = r
+        self.usw = usw
         self.B = self.magnetic_field(r, model, B0, alpha)
+        self.br_angle = self.configuration(topo)
+
+    def configuration(self, topo):
+        if topo == 'Radial':
+            br_angle = np.zeros_like(self.r.data) * u.rad
+        if topo == 'Parker spiral(*)':
+            sun_omega = 14.713 * (u.deg / u.day)
+            usw = self.usw
+            br_angle = (sun_omega / usw) * self.r
+
+        return br_angle
 
     def magnetic_field(self, r, model, B0, alpha):
         r"""
