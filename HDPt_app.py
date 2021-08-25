@@ -135,6 +135,9 @@ def run():
     with st.sidebar.expander('Magnetic fieldlines configuration:', expanded=False):
         fls_model_ = st.radio('', ['Radial','Parker spiral(*)','Streamer(*)'])
         st.markdown('(*) Mode not implemented yet')
+        if fls_model_ == 'Streamer(*)':
+            st.warning('This mode is not implemented yet.')
+            st.stop()
     with st.sidebar.expander('Density models:', expanded=False):
         density_model_ = st.radio('', ['Saito','Newkirk','Leblanc'])
         nfold_value = st.number_input('N-fold number', 0.5, 5., 1., step=0.1)

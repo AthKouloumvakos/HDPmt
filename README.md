@@ -65,6 +65,10 @@ The application should now open in the default browser!
 
 Complete documentation of the _HDPmt_ can be found in HDPmt_doc.ipynb.
 
+## Acknowledging or Citing HDPmt
+
+If you use HDPmt for work or research presented in a publication, please cite this package by including in the Acknowledgement section the following: "This research has made use of HDPmt v?.?.? (fill the version), an open-source and free Python package (include zenodo citation here) developed to model the propagation of a heliospheric disturbance.". Include the HDPmt citation in your paper's reference list.
+
 ## 📦 Usefull python packages:
         
 - [SunPy](https://sunpy.org/): The community-developed, free and open-source solar data analysis environment for Python.
