@@ -116,8 +116,8 @@ class disturbance:
         for i in range(time.size):
             Rsh_x = 0.5 * self.a0 * time[i]**2 + self.V0 * time[i]
             Rsh_y = self.epsilon * Rsh_x
-            Rrc = self.alpha * Rsh_x
-            x[i, :] = np.cos(omega) * Rsh_x + (R_sun+Rrc)
+            Rrc = R_sun + self.alpha * Rsh_x
+            x[i, :] = np.cos(omega) * Rsh_x + Rrc
             y[i, :] = np.sin(omega) * Rsh_y
 
         return x, y
@@ -199,12 +199,17 @@ class disturbance:
         if omega is None:
             #  I put here br_angle = 0 because it doesn't mater on the calculation. This will
             #  change in the future.
-            _, omega, _ = self.calculate_theta_BN(connection_points, 0*u.rad, time = time) 
+            _, omega, _ = self.calculate_theta_BN(connection_points, 0*u.rad, time = time)
 
         V_ = self.a0 * time + self.V0
-        Vshn = (V_ * np.sqrt(np.cos(phi)**2 +
-                (self.epsilon)**2 * np.sin(phi)**2) +
-                V_ * self.alpha * np.cos(omega))        
+
+        Vx = np.cos(omega) * V_ + self.alpha * V_
+        Vy = np.sin(omega) * self.epsilon * V_
+        Vshn = np.cos(omega) * Vx + np.sin(omega) * Vy
+
+        #Vshn = (V_ * np.sqrt(np.cos(phi)**2 +
+        #       (self.epsilon)**2 * np.sin(phi)**2) +
+        #       V_ * self.alpha * np.cos(omega))
 
         Vshn[Vshn < 0] = np.nan
 
