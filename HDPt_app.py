@@ -284,7 +284,7 @@ def run():
 
     if plt_cormodel:
         st.subheader('Coronal models plot')
-        utils_plot.plot_coronal_models(smodel, cmodel_options, app=True)
+        utils_plot.plot_coronal_models(smodel, cpoints, cmodel_options, app=True)
         # Download button
         plot2 = io.BytesIO()
         plt.savefig(plot2, format='png', bbox_inches='tight')

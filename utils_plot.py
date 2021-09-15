@@ -422,9 +422,11 @@ def plot_parameters_profile(smodel, cmodel_options, parameter_mode = 'MA', xmode
 
     return plt
 
-def plot_coronal_models(smodel, cmodel_options, app = False):
+def plot_coronal_models(smodel, cpoints, cmodel_options, app = False):
 
-    r = smodel.connection_points.distance[:, 0]
+    cparams = HDPm.coronal_parameters(cpoints[:, 0], cmodel_options)
+    smodel = smodel.set_parameters(cpoints[:, 0], cparams)
+    r = smodel.connection_points.distance
 
     fig = plt.figure(figsize=(8,7.5),dpi=100)
     ax1 = fig.add_subplot(221)

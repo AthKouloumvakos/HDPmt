@@ -54,7 +54,10 @@ class magnetic_model():
         if topo == 'Parker spiral(*)':
             sun_omega = 14.713 * (u.deg / u.day)
             usw = self.usw
-            br_angle = (sun_omega / usw) * self.r
+            if usw is not None:
+                br_angle = (sun_omega / usw) * self.r
+            else:
+                br_angle = None
 
         return br_angle
 
