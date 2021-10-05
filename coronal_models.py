@@ -51,11 +51,23 @@ class magnetic_model():
     def configuration(self, topo):
         if topo == 'Radial':
             br_angle = np.zeros_like(self.r.data) * u.rad
-        if topo == 'Parker spiral(*)':
-            sun_omega = 14.713 * (u.deg / u.day)
+        if topo == 'Parker spiral':
+            r"""
+            From "Magnetohydrodynamics of the Sun, by Eric Priest, 
+            Cambridge, UK: Cambridge University Press, 2014. 
+            doi:10.1017/CBO9781139020732." see pg. 461, eq. 13.12 
+            \tan(\psi) = \Omega_{\Sun} (r - R_{\Sun}) / \upsilon
+            So, for usw = 400km/s and r = 1AU:
+            we find \psi = <Quantity 47.88701419 deg> as expected.
+            """
             usw = self.usw
+
+            sun_omega = 14.713 * (u.deg / u.day) # Equatorial sidereal rotation rate (angular velocity) of the Sun
+
             if usw is not None:
-                br_angle = (sun_omega / usw) * self.r
+                u_ = sun_omega * (self.r-1*u.R_sun)
+                br_angle = np.arctan((u_.to(u.km / u.s, equivalencies=u.dimensionless_angles()) /
+                                      usw.to(u.km / u.s)).value) * u.rad
             else:
                 br_angle = None
 

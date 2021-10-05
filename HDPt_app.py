@@ -133,7 +133,7 @@ def run():
     st.sidebar.markdown('## Coronal Parameters')
     st.sidebar.markdown('')
     with st.sidebar.expander('Magnetic fieldlines configuration:', expanded=False):
-        fls_model_ = st.radio('', ['Radial','Parker spiral(*)','Streamer(*)'])
+        fls_model_ = st.radio('', ['Radial','Parker spiral','Streamer(*)'])
         st.markdown('(*) Mode not implemented yet')
         if fls_model_ == 'Streamer(*)':
             st.warning('This mode is not implemented yet.')

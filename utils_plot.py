@@ -125,8 +125,8 @@ def plot_propagation(smodel, cmodel_options,
             r = np.linspace(  1, 20, 120) * u.R_sun
             phi, r = np.meshgrid(phi, r)
 
-            if cmodel_options['magnetic_model']['topo'] == 'Parker spiral(*)':
-                sun_omega = 14.713 * (u.deg / u.day)
+            if cmodel_options['magnetic_model']['topo'] == 'Parker spiral':
+                sun_omega = 14.713 * (u.deg / u.day) # Equatorial sidereal rotation rate of the Sun
                 usw = cmodel_options['magnetic_model']['usw']
                 phi = phi - (sun_omega * (r - 1 * u.R_sun) / usw).to(u.deg)
 
@@ -147,13 +147,12 @@ def plot_propagation(smodel, cmodel_options,
                          color=cmap(i), linewidth=1.0)
             cbar = plt.colorbar(sm, ticks=np.arange(0.5, phi.shape[1] ))
             cbar.ax.set_yticklabels(phi[0,:].to_value(u.deg))
-            print(phi[0,:])
             cbar.set_label('Phi [degrees]')
         else:
             phi = np.linspace(-90, 90, 19) * u.deg
             r = np.linspace(  1, 20, 120) * u.R_sun
             phi, r = np.meshgrid(phi, r)
-            if cmodel_options['magnetic_model']['topo'] == 'Parker spiral(*)':
+            if cmodel_options['magnetic_model']['topo'] == 'Parker spiral':
                 sun_omega = 14.713 * (u.deg / u.day)
                 usw = cmodel_options['magnetic_model']['usw']
                 phi = phi - (sun_omega * (r - 1 * u.R_sun) / usw).to(u.deg)
@@ -340,7 +339,7 @@ def plot_parameters_profile(smodel, cmodel_options, parameter_mode = 'MA', xmode
     r = np.logspace(np.log10(1*u.R_sun.in_units(u.km)),
                     np.log10(215*u.R_sun.in_units(u.km)), 250) * u.km
     lon_mesh, distance_mesh = np.meshgrid(phi, r)
-    if cmodel_options['magnetic_model']['topo'] == 'Parker spiral(*)':
+    if cmodel_options['magnetic_model']['topo'] == 'Parker spiral':
         sun_omega = 14.713 * (u.deg / u.day)
         usw = 400 * (u.km / u.second)
         lon_mesh = lon_mesh - (sun_omega * (distance_mesh - 1 * u.R_sun) / usw).to(u.deg)
