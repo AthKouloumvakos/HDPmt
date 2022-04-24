@@ -19,16 +19,15 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-import warnings
-import numpy as np
+
 import astropy.units as u
-from astropy import constants as const
-from astropy.coordinates import BaseCoordinateFrame, SphericalRepresentation, SphericalDifferential
-import streamlit as st
-
 import coronal_models
+import numpy as np
+from astropy import constants as const
+from astropy.coordinates import (BaseCoordinateFrame, SphericalDifferential,
+                                 SphericalRepresentation)
 
-__all__ = ['disturbance_model']
+__all__ = ['disturbance']
 
 
 class connection_points(BaseCoordinateFrame):
@@ -39,11 +38,12 @@ class connection_points(BaseCoordinateFrame):
     def __init__(self, lon: (u.degree), distance: (u.R_sun)):
         super().__init__(lon, 0*u.rad, distance)
 
+
 class coronal_parameters():
     def __init__(self, connection_points, options):
-        
+
         r = connection_points.distance
-        
+
         self.options = options
 
         self.density = coronal_models.density_model(r, model=options['density_model']['model'],
@@ -55,17 +55,18 @@ class coronal_parameters():
         self.sw_speed = coronal_models.solarwind_speed_model(r, model=options['sw_model']['model'],
                                                              T=options['sw_model']['T'])
 
+
 class disturbance:
-    r"""
+    '''
      This is a class for the disturbance
-    """
-    
+    '''
+
     @u.quantity_input
     def __init__(self,
                  a0: (u.km/u.second**2) = 0*(u.km/u.second**2),
                  V0: (u.km/u.second) = 800*(u.km/u.second),
-                 alpha = 0.5,
-                 epsilon = 1):
+                 alpha=0.5,
+                 epsilon=1):
 
         self.a0 = a0  # Disturbance expansion acceleration [km/s^2]
         self.V0 = V0  # Disturbance expansion speed [km/s^2]
@@ -93,9 +94,9 @@ class disturbance:
         self.coronal_parameters = coronal_parameters
         self.parameters.time_con = self.connection_time_to_point(connection_points)
         self.parameters.MA, \
-        self.parameters.Theta_BN, \
-        self.parameters.Vshn, \
-        self.parameters.time_con = self.shock_parameters(connection_points, coronal_parameters)
+            self.parameters.Theta_BN, \
+            self.parameters.Vshn, \
+            self.parameters.time_con = self.shock_parameters(connection_points, coronal_parameters)
 
         return self
 
@@ -110,9 +111,9 @@ class disturbance:
         omega = np.linspace(0, 2*np.pi, 361)*u.rad
         x = np.zeros((time.size, omega.size))*u.km
         y = np.zeros((time.size, omega.size))*u.km
-        
+
         time = np.atleast_1d(time)
-        
+
         for i in range(time.size):
             Rsh_x = 0.5 * self.a0 * time[i]**2 + self.V0 * time[i]
             Rsh_y = self.epsilon * Rsh_x
@@ -123,22 +124,21 @@ class disturbance:
         return x, y
 
     @u.quantity_input
-    def dsh(self, time: u.second):        
-        R_sun = self.constants.R_sun
+    def dsh(self, time: u.second):
         Rsh = 0.5 * self.a0 * time**2 + self.V0 * time
         dsh = 1 * u.R_sun + self.alpha * Rsh
         return dsh
 
     @u.quantity_input
     def connection_time_to_point(self, connection_points):
-        r"""
+        '''
         Calculate the connection time of the disturbance to a point
         with polar coordinates (phi[rad],r[km])
-        """
+        '''
 
         phi = connection_points.lon
         r = connection_points.distance
-        
+
         R_sun = self.constants.R_sun
 
         # Since the point-(r,phi) are known, I use in this calculation
@@ -155,22 +155,22 @@ class disturbance:
             time = (-self.V0 + np.sqrt(self.V0**2 + 2 * self.a0 * rc_pp))/self.a0
 
         time[time.imag.value != 0] = np.nan
-                
+
         return time.decompose()
 
     @u.quantity_input
     def calculate_theta_BN(self, connection_points, br_angle: u.rad, time: u.second = None):
-        r"""
+        '''
         Calculate the shock geometry (Theta_BN angle) at a point
         with polar coordinates (phi[rad], r[km])
-        """
+        '''
 
         phi = connection_points.lon
         r = connection_points.distance
 
         if time is None:
             time = self.connection_time_to_point(connection_points)
-        
+
         if time is None:
             time = self.connection_time_to_point(connection_points)
 
@@ -180,8 +180,8 @@ class disturbance:
         omega = np.arctan2(1, 1/(r*np.sin(phi)/(r*np.cos(phi)-dsh)))
         omega = np.arctan2(1, 1/(self.epsilon**-2 * np.tan(omega)))
         theta_NR = omega - phi
-        theta_NR[theta_NR<0*u.rad] = -(theta_NR[theta_NR<0*u.rad] + (np.pi)*u.rad)
-        omega[phi>(np.pi)*u.rad] = phi[phi>(np.pi)*u.rad] - theta_NR[phi>(np.pi)*u.rad]
+        theta_NR[theta_NR < 0*u.rad] = -(theta_NR[theta_NR < 0*u.rad] + (np.pi)*u.rad)
+        omega[phi > (np.pi)*u.rad] = phi[phi > (np.pi)*u.rad] - theta_NR[phi > (np.pi)*u.rad]
 
         theta_BN = (theta_NR + br_angle) % (np.pi*u.rad)
 
@@ -189,17 +189,16 @@ class disturbance:
 
     @u.quantity_input
     def calculate_vshn(self, connection_points, time: u.second = None, omega: u.rad = None):
-
-        phi = connection_points.lon
-        r = connection_points.distance
-
+        '''
+        Calculate the shock speed at a point with polar coordinates (phi[rad],r[m])
+        '''
         if time is None:
             time = self.connection_time_to_point(connection_points)
 
         if omega is None:
             #  I put here br_angle = 0 because it doesn't mater on the calculation. This will
             #  change in the future.
-            _, omega, _ = self.calculate_theta_BN(connection_points, 0*u.rad, time = time)
+            _, omega, _ = self.calculate_theta_BN(connection_points, 0*u.rad, time=time)
 
         V_ = self.a0 * time + self.V0
 
@@ -207,7 +206,7 @@ class disturbance:
         Vy = np.sin(omega) * self.epsilon * V_
         Vshn = np.cos(omega) * Vx + np.sin(omega) * Vy
 
-        #Vshn = (V_ * np.sqrt(np.cos(phi)**2 +
+        # Vshn = (V_ * np.sqrt(np.cos(phi)**2 +
         #       (self.epsilon)**2 * np.sin(phi)**2) +
         #       V_ * self.alpha * np.cos(omega))
 
@@ -219,24 +218,20 @@ class disturbance:
     def shock_parameters(self, connection_points, coronal_parameters,
                          time: u.second = None, theta_BN: u.rad = None,
                          omega: u.rad = None):
-        r"""
+        '''
         Calculate the shock parameters (MA, Theta_BN, time) at a point
         with polar coordinates (phi[rad],r[m])
-        """
+        '''
 
-        phi = connection_points.lon
-        r = connection_points.distance
-
-        R_sun = self.constants.R_sun
         m_i = self.constants.m_p
 
         if time is None:
             time = self.connection_time_to_point(connection_points)
 
         if (theta_BN is None) or (omega is None):
-            theta_BN, omega, _ = self.calculate_theta_BN(connection_points, 
+            theta_BN, omega, _ = self.calculate_theta_BN(connection_points,
                                                          coronal_parameters.magnetic_field.br_angle,
-                                                         time = time)
+                                                         time=time)
 
         Ne = coronal_parameters.density.Ne
         B = coronal_parameters.magnetic_field.B
@@ -244,7 +239,7 @@ class disturbance:
 
         VA = B / np.sqrt(const.mu0*m_i*(1.92*Ne))
 
-        Vshn = self.calculate_vshn(connection_points, time = time, omega = omega);
+        Vshn = self.calculate_vshn(connection_points, time=time, omega=omega)
 
         MA = np.abs(Vshn-Vsw*np.cos(theta_BN))/VA
 
@@ -252,26 +247,26 @@ class disturbance:
 
     @u.quantity_input
     def first_connection_times(self, phi: u.rad, surface=False):
-        r"""
+        '''
         Calculate the time and height that the disturbance connects
         to a field line for the first time. Phi[rad] is the separation angle of the
         field line with respect to the origin of the disturbance
           #time_fcs, _ = self.first_connection_times(phi, surface = True)
           #time_fc, height_fc = self.first_connection_times(phi)
-        """
-        
+        '''
+
         R_sun = self.constants.R_sun
 
         if surface:
             r = R_sun
         else:
             # The following calculation it is based on finding the
-            # tangent line to an elipse. Start from the ellipse
-            # equation in cartesian coordinates, e^2 (x-dsh)^2 + (y)^2
+            # tangent line to an ellipse. Start from the ellipse
+            # equation in Cartesian coordinates, e^2 (x-dsh)^2 + (y)^2
             # = e^2 Rsh^2 and the equation of line y = mx.
-            # Solve for x, and calculate Rsh by seting the discriminant
+            # Solve for x, and calculate Rsh by setting the discriminant
             # equal to zero. Find x from -b/2a and then r from r =
-            # sqrt(x^2+y^2) seting y=mx and x=-b/2a.
+            # sqrt(x^2+y^2) setting y=mx and x=-b/2a.
             # (a^2 - k/tan(phi)^2) Rsh^2 + 2 a R_sun Rsh + R_sun^2 = 0
             k = np.tan(phi)**2 + self.epsilon**2
             l = (self.alpha**2 - k/np.tan(phi)**2)

@@ -1,9 +1,10 @@
-import numpy as np
 import astropy.units as u
+import numpy as np
 from astropy import constants as const
 from scipy.special import lambertw
 
 # ---- General classes for coronal models ----
+
 
 class density_model():
     @u.quantity_input
@@ -12,15 +13,15 @@ class density_model():
         self.nfold = nfold
         self.r = r
         self.Ne = nfold * self.density(r, model)
-    
+
     def density(self, r, model):
-        r"""
+        '''
         Return the electron density profile from different empirical coronal models.
-        """
+        '''
 
         if model == 'Newkirk':
             N0 = 4.2 * 10**4
-            Ne = N0 * 10**(4.32*u.R_sun/r)
+            Ne = N0 * 10**(4.32 * u.R_sun/r)
         elif model == 'Baumbach':  # Baumbach-Allen Density model (From Aswaden page 82)
             Ne = (2.99*(r/u.R_sun)**(-16) + 1.55*(r/u.R_sun)**(-6) + 0.036*(r/u.R_sun)**(-1.5))*10**8
         elif model == 'Saito':  # Saito Density model
@@ -28,12 +29,13 @@ class density_model():
         elif model == 'Leblanc':  # Leblanch Density model
             Ne = (0.8*10**8*(r/u.R_sun)**(-6) + 0.41*10**7*(r/u.R_sun)**(-4) + 0.33*10**6*(r/u.R_sun)**(-2))
         else:
-            raise ValueError("Non supported density model.")
+            raise ValueError('Non supported density model.')
 
         # All the models should give a density in cm^-3 before returning.
         Ne = ((Ne * u.cm**-3).decompose()).to(u.cm**-3)
 
         return Ne
+
 
 @u.quantity_input
 class magnetic_model():
@@ -52,17 +54,17 @@ class magnetic_model():
         if topo == 'Radial':
             br_angle = np.zeros_like(self.r.data) * u.rad
         if topo == 'Parker spiral':
-            r"""
-            From "Magnetohydrodynamics of the Sun, by Eric Priest, 
-            Cambridge, UK: Cambridge University Press, 2014. 
-            doi:10.1017/CBO9781139020732." see pg. 461, eq. 13.12 
+            r'''
+            From "Magnetohydrodynamics of the Sun, by Eric Priest,
+            Cambridge, UK: Cambridge University Press, 2014.
+            doi:10.1017/CBO9781139020732. see pg. 461, eq. 13.12
             \tan(\psi) = \Omega_{\Sun} (r - R_{\Sun}) / \upsilon
             So, for usw = 400km/s and r = 1AU:
             we find \psi = <Quantity 47.88701419 deg> as expected.
-            """
+            '''
             usw = self.usw
 
-            sun_omega = 14.713 * (u.deg / u.day) # Equatorial sidereal rotation rate (angular velocity) of the Sun
+            sun_omega = 14.713 * (u.deg / u.day)  # Equatorial sidereal rotation rate (angular velocity) of the Sun
 
             if usw is not None:
                 u_ = sun_omega * (self.r-1*u.R_sun)
@@ -74,12 +76,12 @@ class magnetic_model():
         return br_angle
 
     def magnetic_field(self, r, model, B0, alpha):
-        r"""
+        '''
         Return the total magnetic field profile from coronal magnetic
         field models. Only quiet sun models are considered with
         recomended photosheric magnetic field of B0 = 2.2 gauss.
         The 1/r^2 model is recomended.
-        """
+        '''
         if model == '1/r^1':
             B = B0 * (1*u.R_sun/r)**1
         elif model == '1/r^2':
@@ -89,11 +91,12 @@ class magnetic_model():
         elif model == '1/r^a':
             B = B0 * (1*u.R_sun/r)**alpha
         else:
-            raise ValueError("Non supported magnetic field model.")
+            raise ValueError('Non supported magnetic field model.')
 
         B = (B.decompose()).to(u.gauss)
 
         return B
+
 
 @u.quantity_input
 class solarwind_speed_model():
@@ -104,12 +107,12 @@ class solarwind_speed_model():
         self.r = r
         self.vsw = self.solarwind_speed(r, model, T)
 
-    def solarwind_speed(self, r, model, T):    
-        r"""
+    def solarwind_speed(self, r, model, T):
+        '''
         Return the solar wind speed from parker solar wind
         solution using the lambertw function. Only this model is
         considered for the moment.
-        """
+        '''
 
         Rm = const.k_B / const.m_p
         mu = 0.6
@@ -127,8 +130,8 @@ class solarwind_speed_model():
             W_m1 = lambertw(-(D.decompose()).value, -1)
             u_sw[r >= r_c] = np.sqrt(-v_c**2 * W_m1[r >= r_c])
         else:
-            raise ValueError("Non supported solar wind model.")
+            raise ValueError('Non supported solar wind model.')
 
         u_sw = u_sw.to(u.km/u.s)
 
-        return u_sw           
+        return u_sw
