@@ -5,12 +5,14 @@ channels:
   - defaults
 
 dependencies:
-  - python=3.8
+  - python=3.9
   - numpy
   - pandas
   - scipy
   - matplotlib
   - astropy
-  - streamlit=1.9.0
   - pytest-astropy
   - pytest-sugar
+  - pip
+  - pip:
+    - streamlit

@@ -3,7 +3,7 @@ pandas
 scipy
 astropy
 matplotlib
-streamlit==1.9.0
+streamlit
 pytest-astropy
 pytest-sugar
 pytest-check
