@@ -10,7 +10,7 @@
 _HDPm_ is a simple geometrical model to describe the propagation and longitudinal extension of a disturbance
 in the heliosphere and _HDPt_ is a lightweight tool that can be used to visualize the model results and perform
 case studies. The implementation of the Heliospheric Disturbance Propagation Model is described by Kouloumvakos et al. (2021).
-A preview of this tool is available at [https://athkouloumvakos.github.io/HDPmt](https://athkouloumvakos.github.io/HDPmt).
+A preview of this tool is available in [![Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://hpdm-tool.streamlitapp.com).
 
 ## 💾 Installation
 

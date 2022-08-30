@@ -13,6 +13,7 @@ dependencies:
   - astropy
   - pytest-astropy
   - pytest-sugar
+  - pytest_check
   - pip
   - pip:
     - streamlit
