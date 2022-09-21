@@ -109,7 +109,7 @@ def plot_propagation(smodel, cmodel_options,
             cmap = plt.get_cmap('jet_r', len(time))
             norm = colors.BoundaryNorm(np.arange(len(time)+1), len(time))
             sm = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
-            cbar = plt.colorbar(sm, ticks=np.arange(0.5, len(time)))
+            cbar = plt.colorbar(sm, ax=ax, ticks=np.arange(0.5, len(time)))
             cbar.ax.set_yticklabels(time.to_value(u.min))
             cbar.set_label('Time [minutes]')
             for i in range(time.size):
@@ -168,7 +168,7 @@ def plot_propagation(smodel, cmodel_options,
                 # x, y, z = sph2cart(phi_, 0, 20, from_degrees=True)
                 plt.plot(x[:, i], y[:, i],
                          color=cmap(i), linewidth=1.0)
-            cbar = plt.colorbar(sm, ticks=np.arange(0.5, phi.shape[1]))
+            cbar = plt.colorbar(sm, ax=ax, ticks=np.arange(0.5, phi.shape[1]))
             cbar.ax.set_yticklabels(phi[0, :].to_value(u.deg))
             cbar.set_label('Phi [degrees]')
         else:
@@ -315,7 +315,7 @@ def plot_phivstime(smodel, cpoints, cmodel_options,
     plt.xlabel('Longitudinal Separation Angle [degrees]')
     plt.xlim(0, 90)
     plt.ylim(1, 1000)
-    cbar = plt.colorbar(sm, ticks=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
+    cbar = plt.colorbar(sm, ax=ax, ticks=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
     # cbar.ax.set_yticklabels(time.to_value(u.min))
     cbar.set_label('$\\Theta_{BN}$ [degrees]')
     title_text = 'Model Param.: $V_0=%1.0f\\,%s, a_0=%0.2f\\,%s, \\alpha=%1.2f, \\epsilon=%1.2f$' % (smodel.V0.value, smodel.V0.unit, smodel.a0.value, smodel.a0.unit, smodel.alpha, smodel.epsilon)
@@ -402,7 +402,7 @@ def plot_parameters_profile(smodel, cmodel_options, parameter_mode='MA', xmode='
         ylm = (0, 90)
     siz = (xp.shape)[1]
     fig = plt.figure(dpi=150)
-    fig.add_subplot(111)
+    ax = fig.add_subplot(111)
     cmap = plt.get_cmap('turbo', siz)
     norm = colors.BoundaryNorm(phi_.to_value(u.degree), siz)
     sm = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
@@ -416,7 +416,7 @@ def plot_parameters_profile(smodel, cmodel_options, parameter_mode='MA', xmode='
     plt.xlabel(xlbl)
     plt.xlim(xlm)
     plt.ylim(ylm)
-    cbar = plt.colorbar(sm, ticks=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
+    cbar = plt.colorbar(sm, ax=ax, ticks=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
     cbar.set_label('$\\Phi$ [degrees]')
     title_text = 'Model Param.: $V_0=%1.0f\\,%s, a_0=%0.2f\\,%s, \\alpha=%1.2f, \\epsilon=%1.2f$' % (smodel.V0.value, smodel.V0.unit, smodel.a0.value, smodel.a0.unit, smodel.alpha, smodel.epsilon)
     plt.title(title_text, fontsize=10)
