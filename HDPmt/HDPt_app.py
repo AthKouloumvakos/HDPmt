@@ -275,11 +275,11 @@ def run():
                 and _HDPt_ is a lightweight tool that can be used to perform case studies
                 and visualize the modeled results. The implementation of
                 the Heliospheric Disturbance Propagation Model is described by
-                [Kouloumvakos et al. (2021)]().
+                [Kouloumvakos et al. (2021)](https://www.aanda.org/articles/aa/pdf/2023/01/aa44363-22.pdf).
 
                 **Github**: You can find [here](https://github.com/AthKouloumvakos/HDPmt) the latest version of HDPmt.
 
-                **Citation**: Please cite this software as [Kouloumvakos et al. (2021)]()
+                **Citation**: Please cite this software as [Kouloumvakos et al. (2021)](https://ui.adsabs.harvard.edu/abs/2023A%26A...669A..58K/exportcitation)
                 """)
     col1, col2 = st.columns((5, 1))
     col1.markdown("The development of the online tool has received funding from the \

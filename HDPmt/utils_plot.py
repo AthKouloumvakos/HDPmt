@@ -212,7 +212,7 @@ def plot_propagation(smodel, cmodel_options,
     plt.ylim(ylim)
     plt.xlabel('x-axis [Rsun]')
     plt.ylabel('y-axis [Rsun]')
-    plt.grid(b=True)
+    plt.grid(visible=True)
     title_text = 'Model Param.: $V_0=%1.0f\\,%s, a_0=%0.2f\\,%s, \\alpha=%1.2f, \\epsilon=%1.2f$' % (smodel.V0.value, smodel.V0.unit, smodel.a0.value, smodel.a0.unit, smodel.alpha, smodel.epsilon)
     plt.title(title_text, fontsize=10)
 

@@ -4,22 +4,6 @@ def apply(st):
                 #MainMenu {visibility: hidden;}
                 footer {visibility: hidden;}
                 </style> """, unsafe_allow_html=True)
-    # Do some css styling tricks here (e.g. remove the padding)
-    # https://medium.com/ssense-tech/streamlit-tips-tricks-and-hacks-for-data-scientists-d928414e0c16
-    padding = 1
-    st.markdown(f""" <style>
-                .css-12oz5g7{{
-                padding-top: {padding}rem;
-                margin-top: -3.5rem;
-                max-width: 50rem;
-                padding-right: {padding}rem;
-                padding-left: {padding}rem;
-                padding-bottom: {padding}rem;
-                }} </style> """, unsafe_allow_html=True)
-    st.markdown(f""" <style>
-                .css-128j0gw{{
-                margin-top: -3.0rem;
-                }} </style> """, unsafe_allow_html=True)
     # Reduce the space in horizontal component
     st.markdown(f""" <style>
                 hr {{
