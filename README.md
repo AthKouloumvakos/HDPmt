@@ -10,7 +10,7 @@
 _HDPm_ is a simple geometrical model to describe the propagation and longitudinal extension of a disturbance
 in the heliosphere and _HDPt_ is a lightweight tool that can be used to visualize the model results and perform
 case studies. The implementation of the Heliospheric Disturbance Propagation Model is described by Kouloumvakos et al. (2021).
-A preview of this tool is available in [![Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://hpdm-tool.streamlitapp.com).
+A preview of this tool is available in [![Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://hdpm-tool.streamlitapp.com).
 
 ## 💾 Installation
 
@@ -30,7 +30,7 @@ Then every time before using _HDPmt_, you have to activate the environment and w
 
 ```python
 # Activate the enviroment
-conda activate HPDmt
+conda activate HDPmt
 
 # Here you run _HDPmt_ (see Run locally section)
 
@@ -60,13 +60,13 @@ Now you can run any part of the _HDPmt_ (see Run locally section).
 
 You may also add your _HDPmt_ directory to the environment variable ```PYTHONPATH```. This is useful if you need to run _HDPmt_ tests or when you need to run some of the package modules out of streamlit.
 
-In the terminal use the following and change the \<HPDmtRootDir\> with your path.
+In the terminal use the following and change the \<HDPmtRootDir\> with your path.
 
 ```
-export PYTHONPATH="${PYTHONPATH}:<HPDmtRootDir>/HPDmt"
+export PYTHONPATH="${PYTHONPATH}:<HDPmtRootDir>/HDPmt"
 ```
 
-For a permanent solution, if you're using bash (on a Mac or GNU/Linux distribution), add the above line to your ```~/.bashrc``` file (changing the \<HPDmtRootDir\> with your path first).
+For a permanent solution, if you're using bash (on a Mac or GNU/Linux distribution), add the above line to your ```~/.bashrc``` file (changing the \<HDPmtRootDir\> with your path first).
 
 ## 🐾 Run locally the HDPmt application
 
