@@ -92,9 +92,10 @@ def plot_propagation(smodel, cmodel_options,
         wn = np.sin((th_BNpp+phi).to_value(u.rad))  # signe_ * np.tan(omega.to_value(u.rad)) / np.sqrt( 1**2 + np.tan(omega.to_value(u.rad))**2)
         plt.quiver(x, y, un, wn, scale=4.5, color=(1, 0, 0), zorder=105)
 
+        text = r'$\Theta_{Bn} = %.1f^\circ$' '\n' r'$V_{Shn} = %.0f$ km/s' % (  # noqa
+               th_BNpp.to_value(u.deg), Vshn.to_value(u.km/u.second))
         plt.text(x+2.7*un, y+2.7*wn,
-                 '$\Theta_{Bn} = %2.1f^\\circ$ \n $V_{Shn}=%.0f$ km/s' % (  # noqa
-                     th_BNpp.to_value(u.deg), Vshn.to_value(u.km/u.second)),
+                 text,
                  color=(1, 0, 0), fontsize=11, verticalalignment='center',
                  clip_on=True)
 
@@ -213,13 +214,14 @@ def plot_propagation(smodel, cmodel_options,
     plt.xlabel('x-axis [Rsun]')
     plt.ylabel('y-axis [Rsun]')
     plt.grid(visible=True)
-    title_text = 'Model Param.: $V_0=%1.0f\\,%s, a_0=%0.2f\\,%s, \\alpha=%1.2f, \\epsilon=%1.2f$' % (smodel.V0.value, smodel.V0.unit, smodel.a0.value, smodel.a0.unit, smodel.alpha, smodel.epsilon)
+    title_text = r'Model Param.: $V_0 = %.0f\,\text{%s},\ a_0 = %.2f\,\text{%s},\ \alpha = %.2f,\ \epsilon = %.2f$' % (smodel.V0.value, smodel.V0.unit, smodel.a0.value, smodel.a0.unit, smodel.alpha, smodel.epsilon)
     plt.title(title_text, fontsize=10)
 
     if extra is not None:
         overplot_(smodel, extra)
 
-    plt.tight_layout()
+    # plt.tight_layout()
+
     if app is True:
         st.pyplot(fig)
     else:
@@ -266,7 +268,7 @@ def plot_phivstime(smodel, cpoints, cmodel_options,
                     tpp_.to_value(u.min),
                     s=25, marker='o', color=(0, 0, 0), zorder=105)
 
-        plt.text(60, 2, 'Parameters: \n $T_{con.} = %2.1f$ min. \n $ \Phi = %2.1f^\\circ$ \n $\Theta_{Bn} =     %2.1f^\\circ$ \n' % (  # noqa
+        plt.text(64, 2, r'Parameters:' '\n' r'$T_{con.} = %.1f$ min.' '\n' r'$\Phi = %.1f^\circ$' '\n' r'$\Theta_{Bn} = %.1f^\circ$' % (  # noqa
             tpp_.to_value(u.min),
             phi.to_value(u.deg),
             ThBN.to_value(u.deg)),
@@ -297,7 +299,7 @@ def plot_phivstime(smodel, cpoints, cmodel_options,
     if plot_MA:
         cs = plt.contour(phi.to_value(u.deg),
                          time.to_value(u.minute),
-                         MA,
+                         MA.to_value(u.dimensionless_unscaled),
                          levels=[0.5, 1, 1.5, 2, 2.7, 4, 6, 8, 10],
                          colors='black', linestyles='-', linewidths=0.7)
         ax.clabel(cs, cs.levels, inline=True, fmt=r'%1.1f', fontsize=9)
@@ -318,13 +320,14 @@ def plot_phivstime(smodel, cpoints, cmodel_options,
     cbar = plt.colorbar(sm, ax=ax, ticks=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
     # cbar.ax.set_yticklabels(time.to_value(u.min))
     cbar.set_label('$\\Theta_{BN}$ [degrees]')
-    title_text = 'Model Param.: $V_0=%1.0f\\,%s, a_0=%0.2f\\,%s, \\alpha=%1.2f, \\epsilon=%1.2f$' % (smodel.V0.value, smodel.V0.unit, smodel.a0.value, smodel.a0.unit, smodel.alpha, smodel.epsilon)
+    title_text = r'Model Param.: $V_0 = %.0f\,\text{%s},\ a_0 = %.2f\,\text{%s},\ \alpha = %.2f,\ \epsilon = %.2f$' % (smodel.V0.value, smodel.V0.unit, smodel.a0.value, smodel.a0.unit, smodel.alpha, smodel.epsilon)
     plt.title(title_text, fontsize=10)
 
     if extra is not None:
         overplot_(extra)
 
-    plt.tight_layout()
+    # plt.tight_layout()
+
     if app is True:
         st.pyplot(fig)
     else:
@@ -418,7 +421,7 @@ def plot_parameters_profile(smodel, cmodel_options, parameter_mode='MA', xmode='
     plt.ylim(ylm)
     cbar = plt.colorbar(sm, ax=ax, ticks=[0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
     cbar.set_label('$\\Phi$ [degrees]')
-    title_text = 'Model Param.: $V_0=%1.0f\\,%s, a_0=%0.2f\\,%s, \\alpha=%1.2f, \\epsilon=%1.2f$' % (smodel.V0.value, smodel.V0.unit, smodel.a0.value, smodel.a0.unit, smodel.alpha, smodel.epsilon)
+    title_text = r'Model Param.: $V_0 = %.0f\,\text{%s},\ a_0 = %.2f\,\text{%s},\ \alpha = %.2f,\ \epsilon = %.2f$' % (smodel.V0.value, smodel.V0.unit, smodel.a0.value, smodel.a0.unit, smodel.alpha, smodel.epsilon)
     plt.title(title_text, fontsize=10)
 
     if extra is not None:
@@ -437,7 +440,7 @@ def plot_parameters_profile(smodel, cmodel_options, parameter_mode='MA', xmode='
         plt.plot(xp, parameter, color=(0, 0, 0, 1), linewidth=1)
         overplot_(smodel, extra, xmode)
 
-    plt.tight_layout()
+    # plt.tight_layout()
 
     if app is True:
         st.pyplot(fig)
@@ -502,7 +505,7 @@ def plot_coronal_models(smodel, cpoints, cmodel_options, app=False):
     ax3.legend(h3, [cmodel_options['sw_model']['model'] +
                     ' ($T_0$=' + '{:.2f}'.format((cmodel_options['sw_model']['T']).to(u.megaKelvin)) + ')'])
 
-    plt.tight_layout()
+    # plt.tight_layout()
     if app is True:
         st.pyplot(fig)
     else:

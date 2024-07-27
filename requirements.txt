@@ -1,7 +1,7 @@
-numpy
+numpy==1.26.4
 pandas
 scipy
-astropy
+astropy==6.0.0
 matplotlib
 streamlit
 pytest-astropy
